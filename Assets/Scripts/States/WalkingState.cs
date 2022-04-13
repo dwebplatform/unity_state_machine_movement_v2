@@ -27,8 +27,15 @@ public class WalkingState : BaseState
   public override void HandleInput()
   {
     base.HandleInput();
+    if(Input.GetKeyDown(KeyCode.Space)){
+      _movementController.ChangeState(MovementController.jumpingState);
+    }
   }
-
+  public override void Exit()
+  {
+    base.Exit();
+    MovementController.gravityStartTime = Time.time;
+  }
   public override void LogicUpdate()
   {
     base.LogicUpdate();

@@ -10,7 +10,6 @@ public class IdleState : BaseState
   private MovementController _movementController;
   private float _horizontalInput;
   HittedParams hittedParams;
-  // public 
   private bool _isGrounded;
   private float offset = 0.1f;
   public IdleState(string name, MovementController movementController) : base(name)
@@ -24,17 +23,19 @@ public class IdleState : BaseState
     _movementController.playerVelocity = new Vector2(0f, 0f);
   }
 
-
   public void TryWalk()
   {
     //* if wall in front of movement don't enter to walking state
     bool isAllowedMoveForward = true;
-    if(_horizontalInput> Mathf.Epsilon && hittedParams.isHittedRight){
+    
+    if(_horizontalInput > Mathf.Epsilon && hittedParams.isHittedRight){
       isAllowedMoveForward = false;
     }
+    
     if(_horizontalInput < 0f && hittedParams.isHittedLeft){
       isAllowedMoveForward = false;
     }
+
     if(isAllowedMoveForward){
       _movementController.ChangeState(MovementController.walkingState);
     }
@@ -43,21 +44,26 @@ public class IdleState : BaseState
   {
     base.HandleInput();
     _horizontalInput = Input.GetAxis("Horizontal");
-
-    if (Mathf.Abs(_horizontalInput) > Mathf.Epsilon)
-    {
-      TryWalk();
+    if(Input.GetKeyDown(KeyCode.Space)){
+      _movementController.ChangeState(MovementController.jumpingState);
     }
   }
 
   public override void Exit()
   {
     base.Exit();
+    //* set _starting from walk
+    MovementController.gravityStartTime = Time.time;
   }
 
   public override void LogicUpdate()
   {
     base.LogicUpdate();
+    if (Mathf.Abs(_horizontalInput) > Mathf.Epsilon)
+    {
+      TryWalk();
+    }
+
   }
   public override void PhysicsUpdate()
   {
