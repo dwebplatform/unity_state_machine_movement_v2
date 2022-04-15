@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class JumpingState : BaseState
 {
@@ -6,13 +7,13 @@ public class JumpingState : BaseState
   private float _jumpForce = 8f;
   private float _startTime;
   private bool _isGravityIgnored;
-  private bool _isWallIgnored;
-  private int counter = 0;
   private float _movementSpeed = 5f;
   private float offset = 0.1f;
   private bool _isGrounded;
   private float _horizontalInput;
   private HittedParams hittedParams;
+
+  private float _undoIgnoreWallTimer;
   public JumpingState(string name, MovementController movementController) : base(name)
   {
     _movementController = movementController;
@@ -21,10 +22,7 @@ public class JumpingState : BaseState
   {
     base.Enter();
     _movementController.playerVelocity = new Vector2(_movementController.playerVelocity.x, _jumpForce);
-    //* нужно знать, от чего отскочил объект, чтобы игнорировать только его, а иначе бывает, что
-    //* объект прыгнул и влетел в стену, в этот момент игнорировалась гравитация И ПРОВЕРКА СТЕНЫ, они должны быть независимыми
     _isGrounded = false;
-    counter += 1;
   }
 
   public override void HandleInput()
@@ -37,8 +35,9 @@ public class JumpingState : BaseState
     base.Exit();
     hittedParams.isHittedLeft = false;
     hittedParams.isHittedRight = false;
-    _isWallIgnored = false;
+    ignoreWall = false;
   }
+  private bool ignoreWall = false;
   public override void LogicUpdate()
   {
     base.LogicUpdate();
@@ -47,15 +46,24 @@ public class JumpingState : BaseState
       _movementController.ChangeState(MovementController.idleState);
     }
     
-    
-    if(!_isWallIgnored && hittedParams.isHittedLeft){
-      _movementController.ChangeState(MovementController.leftWallHitted);
-    } 
-    if(!_isWallIgnored && hittedParams.isHittedRight){
-      _movementController.ChangeState(MovementController.rightWallHitted);
-    }
-  }
+     
+     bool isEnteredToRocket = false;
+     if(hittedParams.isHittedLeft){
+       MovementController.wallHittedNormal = new Vector2(-1,0);
+       isEnteredToRocket = true;
+     }
+     else if(hittedParams.isHittedRight){
+       MovementController.wallHittedNormal = new Vector2(1,0);
+       isEnteredToRocket = true;
+     } 
 
+      if(isEnteredToRocket){
+        MovementController.wallGrabState.hittedNormal = MovementController.wallHittedNormal;
+        _movementController.ChangeState(MovementController.wallGrabState);
+      }
+
+  }
+  
   public override void PhysicsUpdate()
   {
     base.PhysicsUpdate();
@@ -77,14 +85,12 @@ public class JumpingState : BaseState
   {
     _isGrounded = false;
   });
-      if (!_isGrounded && !_isWallIgnored)
+      if (!_isGrounded)
       {
         _movementController.playerVelocity.y -= MovementController.GRAVITY_SCALE * Time.fixedDeltaTime;
       }
     }
 
-
-    _isWallIgnored = CheckIgnoreWall();
     
     collisionManager.WallCheck(MovementController.WALL_OFFSET, (rightCollidedInfo, isHitted) =>
     {
@@ -108,9 +114,8 @@ public class JumpingState : BaseState
   }
   private void TryMove()
   {
-    if(!_isWallIgnored){
-      _movementController.playerVelocity = new Vector2(_horizontalInput*_movementSpeed,_movementController.playerVelocity.y);
-    }
+
+    _movementController.playerVelocity = new Vector2(_horizontalInput*_movementSpeed,_movementController.playerVelocity.y);
     if (Mathf.Sign(_movementController.playerVelocity.x) > 0 && hittedParams.isHittedRight)
     {
         _movementController.playerVelocity.x = 0f;

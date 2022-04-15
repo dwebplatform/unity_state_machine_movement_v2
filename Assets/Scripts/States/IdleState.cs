@@ -20,7 +20,7 @@ public class IdleState : BaseState
   public override void Enter()
   {
     base.Enter();
-    _movementController.playerVelocity = new Vector2(0f, 0f);
+    _movementController.playerVelocity = new Vector2(0f, _movementController.playerVelocity.y);
   }
 
   public void TryWalk()

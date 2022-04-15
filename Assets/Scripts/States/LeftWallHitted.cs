@@ -13,14 +13,15 @@ public class LeftWallHitted : BaseState
   public override void Enter()
   {
     base.Enter();
+    MovementController.previosHorizontalValue = 0f;
   }
   public override void Exit()
   {
     base.Exit();
     MovementController.wallStartTime = Time.time;
     _isGrounded = false;
+    MovementController.previosHorizontalValue = Input.GetAxis("Horizontal");
   }
-
   private void TryJump()
   {
     _movementController.playerVelocity = new Vector2(_impulseSpeed, 0f);
@@ -35,7 +36,7 @@ public class LeftWallHitted : BaseState
     }
     bool isRightPressed = Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow);
 
-    if (Input.GetKeyDown(KeyCode.Space) && isRightPressed)
+    if (Input.GetKeyDown(KeyCode.Space))
     {
       TryJump();
     }

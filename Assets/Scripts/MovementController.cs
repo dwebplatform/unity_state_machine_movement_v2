@@ -1,6 +1,4 @@
 using UnityEngine;
-using System;
-
 public struct CollidedInfo
 {
   public Vector3 normal;
@@ -13,22 +11,28 @@ public class MovementController : MonoBehaviour
   Rigidbody2D _rigidBody;
   public BoxCollider2D _boxCollider;
   public Vector2 playerVelocity;
+
+  static public Vector2 wallHittedNormal;
   static public float GRAVITY_SCALE = 32f;
+  public static float WALL_OFFSET = 0.01f;
+
+  public static float previosHorizontalValue = 0f;
   //* managers: start
   public static CollisionManager collisionManager;
-  public static float WALL_OFFSET = 0.01f;
   public static float gravityStartTime;
   public static float wallStartTime;
   #region 
   private BaseState _currentState;
   public static IdleState idleState;
+
+  public static WallGrabState wallGrabState;
   public static WalkingState walkingState;
   public static JumpingState jumpingState;
   public static RightWallHitted rightWallHitted;
   public static LeftWallHitted leftWallHitted;
+  public static JumpFromWallState jumpFromWallState;
   #endregion
   //* States: end
-
   public void ChangeState(BaseState newState)
   {
     if (newState != _currentState)
@@ -49,7 +53,9 @@ public class MovementController : MonoBehaviour
     MovementController.jumpingState = new JumpingState("Jumping", this);
     MovementController.rightWallHitted  = new RightWallHitted("Right", this);
     MovementController.leftWallHitted = new LeftWallHitted("Left",this);
-    
+    MovementController.wallGrabState = new WallGrabState("WallGrab", this);
+    MovementController.jumpFromWallState = new JumpFromWallState("jumpFromWallState",this);
+
     _currentState = MovementController.idleState;
   }
 
